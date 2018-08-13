@@ -42,7 +42,7 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
                     userPassword
                   )) {
                 AuthenticationResult(
-                  success = userPassword.equals(digestHeader.userName),
+                  success = true,
                   principal = Some(digestHeader.userName),
                   errorMessage = None
                 )
