@@ -6,6 +6,10 @@ import scala.concurrent.Future
 
 abstract class DigestAuthenticatorConfiguration()
     extends AuthenticatorConfiguration {
+  val realm: String = "digest@freeacs.com"
+
+  val nonceValidInMillis: Long = 10000
+
   import DigestAuthenticatorConfiguration._
 
   val passwordRetriever: PasswordRetriever

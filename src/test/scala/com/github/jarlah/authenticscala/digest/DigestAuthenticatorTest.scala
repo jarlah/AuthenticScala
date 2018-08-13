@@ -23,7 +23,8 @@ class DigestAuthenticatorTest extends FlatSpec {
         AuthenticationContext(
           "POST",
           "/",
-          Map("Authorization" -> "Invalid....")
+          Map("Authorization" -> "Invalid...."),
+          "127.0.0.1"
         )
       ),
       FiniteDuration(1, TimeUnit.SECONDS)
@@ -52,7 +53,12 @@ class DigestAuthenticatorTest extends FlatSpec {
       )
     val r = Await.result(
       authenticator.authenticate(
-        AuthenticationContext("POST", "/", Map("Authorization" -> digestheader))
+        AuthenticationContext(
+          "POST",
+          "/",
+          Map("Authorization" -> digestheader),
+          "127.0.0.1"
+        )
       ),
       FiniteDuration(1, TimeUnit.SECONDS)
     )
@@ -78,13 +84,33 @@ class DigestAuthenticatorTest extends FlatSpec {
           Future.successful
         )
       )
+    val context = AuthenticationContext(
+      "POST",
+      "/",
+      Map("Authorization" -> digestheader),
+      "127.0.0.1"
+    )
     val r = Await.result(
-      authenticator.authenticate(
-        AuthenticationContext("POST", "/", Map("Authorization" -> digestheader))
-      ),
+      authenticator.authenticate(context),
       FiniteDuration(1, TimeUnit.SECONDS)
     )
     assert(r.success)
     assert(r.errorMessage.isEmpty)
+  }
+
+  "dsd" should "dadd" in {
+    val authenticator =
+      DigestAuthenticator(
+        DigestAuthenticatorConfiguration(
+          Future.successful
+        )
+      )
+    val context = AuthenticationContext(
+      "POST",
+      "/",
+      Map(),
+      "127.0.0.1"
+    )
+    println(authenticator.challenge(context))
   }
 }

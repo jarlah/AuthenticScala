@@ -1,4 +1,5 @@
 package com.github.jarlah.authenticscala.digest
+import com.github.jarlah.authenticscala.utils.DigestUtils
 
 case class DigestHeader(
     verb: String,
@@ -30,8 +31,16 @@ case class DigestHeader(
     if (this.realm != realm) {
       return false
     }
-    // TODO
-    true
+    val hash1 = DigestUtils.md5Hex(s"$userName:$realm:$password")
+    val hash2 = DigestUtils.md5Hex(s"$verb:$uri")
+
+    if (qualityOfProtection == Authentication) {
+      response == DigestUtils.md5Hex(
+        s"$hash1:$nonce:${"%08d".format(requestCounter)}:$clientNonce:${qualityOfProtection.getClass.getSimpleName}:$hash2"
+      )
+    } else {
+      response == DigestUtils.md5Hex(s"$hash1:$nonce:$hash2")
+    }
   }
 
 }
