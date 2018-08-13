@@ -10,22 +10,17 @@ abstract class DigestAuthenticatorConfiguration()
 
   val passwordRetriever: PasswordRetriever
 
-  val passwordVerifier: PasswordVerifier
-
   val privateKey: String = "verysecretkey"
 
 }
 
 object DigestAuthenticatorConfiguration {
   type PasswordRetriever = String => Future[String]
-  type PasswordVerifier  = String => Future[Boolean]
 
   def apply(
-      retriever: PasswordRetriever,
-      verifier: PasswordVerifier
+      retriever: PasswordRetriever
   ): DigestAuthenticatorConfiguration =
     new DigestAuthenticatorConfiguration {
       override val passwordRetriever: PasswordRetriever = retriever
-      override val passwordVerifier: PasswordVerifier   = verifier
     }
 }

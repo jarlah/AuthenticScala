@@ -15,8 +15,7 @@ class DigestAuthenticatorTest extends FlatSpec {
     val authenticator =
       DigestAuthenticator(
         DigestAuthenticatorConfiguration(
-          Future.successful,
-          u => Future.successful(true)
+          Future.successful
         )
       )
     val r = Await.result(
@@ -48,8 +47,7 @@ class DigestAuthenticatorTest extends FlatSpec {
     val authenticator =
       DigestAuthenticator(
         DigestAuthenticatorConfiguration(
-          Future.successful,
-          u => Future.successful(true)
+          Future.successful
         )
       )
     val r = Await.result(
@@ -77,8 +75,7 @@ class DigestAuthenticatorTest extends FlatSpec {
     val authenticator =
       DigestAuthenticator(
         DigestAuthenticatorConfiguration(
-          Future.successful,
-          u => Future.successful(true)
+          Future.successful
         )
       )
     val r = Await.result(

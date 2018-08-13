@@ -26,15 +26,24 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
       .extractDigestHeader(context.httpMethod, authHeader) match {
       case Right(digestHeader) =>
         config
-          .passwordVerifier(digestHeader.userName)
+          .passwordRetriever(digestHeader.userName)
           .map(
-            valid =>
+            secret =>
               AuthenticationResult(
-                success = valid,
+                success = secret.equals(digestHeader.userName),
                 principal = Some(digestHeader.userName),
                 errorMessage = None
             )
           )
+          .recover {
+            case e: Throwable =>
+              AuthenticationResult(
+                success = false,
+                principal = None,
+                errorMessage = Some(e.getLocalizedMessage)
+              )
+          }
+
       case Left(error) =>
         Future.successful(
           AuthenticationResult(
