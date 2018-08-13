@@ -4,7 +4,8 @@ import com.github.jarlah.authenticscala.AuthenticatorConfiguration
 
 import scala.concurrent.Future
 
-trait DigestAuthenticatorConfiguration extends AuthenticatorConfiguration {
+abstract class DigestAuthenticatorConfiguration()
+    extends AuthenticatorConfiguration {
   import DigestAuthenticatorConfiguration._
 
   val passwordRetriever: PasswordRetriever
@@ -24,7 +25,7 @@ object DigestAuthenticatorConfiguration {
       verifier: PasswordVerifier
   ): DigestAuthenticatorConfiguration =
     new DigestAuthenticatorConfiguration {
-      override val passwordRetriever = retriever
-      override val passwordVerifier  = verifier
+      override val passwordRetriever: PasswordRetriever = retriever
+      override val passwordVerifier: PasswordVerifier   = verifier
     }
 }
