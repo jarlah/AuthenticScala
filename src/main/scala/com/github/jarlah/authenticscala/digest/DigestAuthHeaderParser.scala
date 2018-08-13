@@ -27,7 +27,7 @@ object DigestAuthHeaderParser {
       )
     }
 
-    var headerDictionary: Map[String, String] = keyValuePairs
+    val headerDictionary: Map[String, String] = keyValuePairs
       .split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
       .map(pair => {
         val firstEqualIndex = pair.indexOf("=")
