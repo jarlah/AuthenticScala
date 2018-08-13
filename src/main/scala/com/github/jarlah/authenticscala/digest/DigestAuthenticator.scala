@@ -6,6 +6,8 @@ import com.github.jarlah.authenticscala.{
   Authenticator
 }
 
+import scala.concurrent.{ExecutionContext, Future}
+
 final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
     extends Authenticator[DigestAuthenticatorConfiguration] {
 
@@ -13,7 +15,9 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
     config.privateKey
   )
 
-  def authenticate(context: AuthenticationContext): AuthenticationResult = {
+  def authenticate(
+      context: AuthenticationContext
+  )(implicit ec: ExecutionContext): Future[AuthenticationResult] = {
     if (null == context) {
       throw new IllegalArgumentException("missing context")
     }
@@ -21,16 +25,23 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
     DigestAuthHeaderParser
       .extractDigestHeader(context.httpMethod, authHeader) match {
       case Right(digestHeader) =>
-        AuthenticationResult(
-          success = true,
-          principal = Some(digestHeader.userName),
-          errorMessage = None
-        )
+        config
+          .passwordVerifier(digestHeader.userName)
+          .map(
+            valid =>
+              AuthenticationResult(
+                success = valid,
+                principal = Some(digestHeader.userName),
+                errorMessage = None
+            )
+          )
       case Left(error) =>
-        AuthenticationResult(
-          success = false,
-          principal = None,
-          errorMessage = Some(error)
+        Future.successful(
+          AuthenticationResult(
+            success = false,
+            principal = None,
+            errorMessage = Some(error)
+          )
         )
     }
   }

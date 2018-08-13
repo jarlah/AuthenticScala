@@ -9,15 +9,22 @@ trait DigestAuthenticatorConfiguration extends AuthenticatorConfiguration {
 
   val passwordRetriever: PasswordRetriever
 
+  val passwordVerifier: PasswordVerifier
+
   val privateKey: String = "verysecretkey"
 
 }
 
 object DigestAuthenticatorConfiguration {
   type PasswordRetriever = String => Future[String]
+  type PasswordVerifier  = String => Future[Boolean]
 
-  def apply(retriever: PasswordRetriever): DigestAuthenticatorConfiguration =
+  def apply(
+      retriever: PasswordRetriever,
+      verifier: PasswordVerifier
+  ): DigestAuthenticatorConfiguration =
     new DigestAuthenticatorConfiguration {
       override val passwordRetriever = retriever
+      override val passwordVerifier  = verifier
     }
 }

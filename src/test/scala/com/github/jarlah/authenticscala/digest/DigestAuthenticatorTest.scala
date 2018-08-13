@@ -1,21 +1,37 @@
 package com.github.jarlah.authenticscala.digest
 
+import java.util.concurrent.TimeUnit
+
 import com.github.jarlah.authenticscala.AuthenticationContext
 import org.scalatest.FlatSpec
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.FiniteDuration
 
 class DigestAuthenticatorTest extends FlatSpec {
 
   "An invalid digest header" should "return failed authentication result" in {
     val authenticator =
-      DigestAuthenticator(DigestAuthenticatorConfiguration(Future.successful))
-    val result = authenticator.authenticate(
-      AuthenticationContext("POST", "/", Map("Authorization" -> "Invalid..."))
+      DigestAuthenticator(
+        DigestAuthenticatorConfiguration(
+          Future.successful,
+          u => Future.successful(true)
+        )
+      )
+    val r = Await.result(
+      authenticator.authenticate(
+        AuthenticationContext(
+          "POST",
+          "/",
+          Map("Authorization" -> "Invalid....")
+        )
+      ),
+      FiniteDuration(1, TimeUnit.SECONDS)
     )
-    assert(!result.success)
+    assert(!r.success)
     assert(
-      result.errorMessage.contains(
+      r.errorMessage.contains(
         "AuthHeader cannot be null or empty OR does not start with Digest"
       )
     )
@@ -30,12 +46,20 @@ class DigestAuthenticatorTest extends FlatSpec {
         |opaque="5ccc069c403ebaf9f0171e9517f40e41
         |"""".stripMargin
     val authenticator =
-      DigestAuthenticator(DigestAuthenticatorConfiguration(Future.successful))
-    val result = authenticator.authenticate(
-      AuthenticationContext("POST", "/", Map("Authorization" -> digestheader))
+      DigestAuthenticator(
+        DigestAuthenticatorConfiguration(
+          Future.successful,
+          u => Future.successful(true)
+        )
+      )
+    val r = Await.result(
+      authenticator.authenticate(
+        AuthenticationContext("POST", "/", Map("Authorization" -> digestheader))
+      ),
+      FiniteDuration(1, TimeUnit.SECONDS)
     )
-    assert(!result.success)
-    assert(result.errorMessage.contains("auth-int is not currently supported"))
+    assert(!r.success)
+    assert(r.errorMessage.contains("auth-int is not currently supported"))
   }
 
   "A valid digest header" should "return successfully authentication result" in {
@@ -51,11 +75,19 @@ class DigestAuthenticatorTest extends FlatSpec {
         |opaque="5ccc069c403ebaf9f0171e9517f40e41"
       """.stripMargin
     val authenticator =
-      DigestAuthenticator(DigestAuthenticatorConfiguration(Future.successful))
-    val result = authenticator.authenticate(
-      AuthenticationContext("POST", "/", Map("Authorization" -> digestheader))
+      DigestAuthenticator(
+        DigestAuthenticatorConfiguration(
+          Future.successful,
+          u => Future.successful(true)
+        )
+      )
+    val r = Await.result(
+      authenticator.authenticate(
+        AuthenticationContext("POST", "/", Map("Authorization" -> digestheader))
+      ),
+      FiniteDuration(1, TimeUnit.SECONDS)
     )
-    assert(result.success)
-    assert(result.errorMessage.isEmpty)
+    assert(r.success)
+    assert(r.errorMessage.isEmpty)
   }
 }
