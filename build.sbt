@@ -1,3 +1,5 @@
+organization := "com.github.jarlah"
+
 name := "AuthenticScala"
 
 version := "0.1"

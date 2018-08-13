@@ -8,7 +8,7 @@ abstract class DigestAuthenticatorConfiguration()
     extends AuthenticatorConfiguration {
   val realm: String = "digest@freeacs.com"
 
-  val nonceValidInMillis: Long = 10000
+  val nonceValidInMillis: Long = 1000000
 
   import DigestAuthenticatorConfiguration._
 

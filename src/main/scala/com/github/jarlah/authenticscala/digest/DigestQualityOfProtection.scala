@@ -1,6 +1,12 @@
 package com.github.jarlah.authenticscala.digest
 
-sealed trait DigestQualityOfProtection
+sealed trait DigestQualityOfProtection {
+  val name: String
+}
 
-case object Authentication              extends DigestQualityOfProtection
-case object AuthenticationWithIntegrity extends DigestQualityOfProtection
+case object Authentication extends DigestQualityOfProtection {
+  val name = "auth"
+}
+case object AuthenticationWithIntegrity extends DigestQualityOfProtection {
+  val name = "auth-int"
+}

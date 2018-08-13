@@ -36,13 +36,12 @@ case class DigestHeader(
 
     if (qualityOfProtection == Authentication) {
       response == DigestUtils.md5Hex(
-        s"$hash1:$nonce:${"%08d".format(requestCounter)}:$clientNonce:${qualityOfProtection.getClass.getSimpleName}:$hash2"
+        s"$hash1:$nonce:${"%08d".format(requestCounter)}:$clientNonce:${qualityOfProtection.name}:$hash2"
       )
     } else {
       response == DigestUtils.md5Hex(s"$hash1:$nonce:$hash2")
     }
   }
-
 }
 
 object DigestHeader {

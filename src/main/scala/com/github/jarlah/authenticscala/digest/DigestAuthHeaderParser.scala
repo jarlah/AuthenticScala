@@ -44,7 +44,7 @@ object DigestAuthHeaderParser {
       userName = headerDictionary.getOrElse("username", ""),
       realm = headerDictionary.getOrElse("realm", ""),
       uri = headerDictionary.getOrElse("uri", ""),
-      nonce = headerDictionary.getOrElse("cnonce", ""),
+      nonce = headerDictionary.getOrElse("nonce", ""),
       requestCounter = headerDictionary.get("nc").map(_.toInt).getOrElse(0),
       clientNonce = headerDictionary.getOrElse("cnonce", ""),
       response = headerDictionary.getOrElse("response", ""),
