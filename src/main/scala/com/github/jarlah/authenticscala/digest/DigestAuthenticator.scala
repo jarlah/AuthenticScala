@@ -1,5 +1,6 @@
 package com.github.jarlah.authenticscala.digest
 
+import com.github.jarlah.authenticscala.Authenticator.PasswordRetriever
 import com.github.jarlah.authenticscala.{
   AuthenticationContext,
   AuthenticationResult,
@@ -8,19 +9,23 @@ import com.github.jarlah.authenticscala.{
 
 import scala.concurrent.{ExecutionContext, Future}
 
+object DigestAuthenticator {
+  def apply(passwordRetriever: PasswordRetriever): DigestAuthenticator =
+    DigestAuthenticator(DigestAuthenticatorConfiguration(passwordRetriever))
+
+  def challenge(context: AuthenticationContext): Map[String, String] =
+    new DigestAuthenticator(DigestAuthenticatorConfiguration(Future.successful))
+      .challenge(context)
+}
+
 final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
     extends Authenticator[DigestAuthenticatorConfiguration] {
 
-  val privateHashEncoder: PrivateHashEncoder = PrivateHashEncoder(
-    config.privateKey
-  )
+  private val privateHashEncoder = PrivateHashEncoder(config.noncePrivateKey)
 
   def authenticate(
       context: AuthenticationContext
   )(implicit ec: ExecutionContext): Future[AuthenticationResult] = {
-    if (null == context) {
-      throw new IllegalArgumentException("missing context")
-    }
     val authHeader = context.httpHeaders.getOrElse("Authorization", "")
     DigestAuthHeaderParser
       .extractDigestHeader(context.httpMethod, authHeader) match {
@@ -75,10 +80,7 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
     }
   }
 
-  def challenge(context: AuthenticationContext): (String, String) = {
-    if (null == context) {
-      throw new IllegalArgumentException("missing context")
-    }
+  def challenge(context: AuthenticationContext): Map[String, String] = {
     val authHeader = context.httpHeaders.getOrElse("Authorization", "")
     val stale = DigestAuthHeaderParser
       .extractDigestHeader(context.httpMethod, authHeader) match {
@@ -96,9 +98,9 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
     }
     val nonce  = NonceManager.generate(context.remoteAddress, privateHashEncoder)
     val opaque = OpaqueManager.generate(nonce)
-    (
-      "WWW-Authenticate",
-      s"""Digest realm="${config.realm}", nonce="$nonce", opaque="$opaque", stale=$stale, algorithm=MD5, qop="auth""""
+    Map(
+      "WWW-Authenticate" ->
+        s"""Digest realm="${config.realm}", nonce="$nonce", opaque="$opaque", stale=$stale, algorithm=MD5, qop="auth""""
     )
   }
 }
