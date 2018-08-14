@@ -6,16 +6,26 @@ import com.github.jarlah.authenticscala.{
   AuthenticationResult,
   Authenticator
 }
+import com.typesafe.config.Config
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object DigestAuthenticator {
-  def apply(passwordRetriever: PasswordRetriever): DigestAuthenticator =
-    DigestAuthenticator(DigestAuthenticatorConfiguration(passwordRetriever))
+  def apply(
+      passwordRetriever: PasswordRetriever,
+      config: Config
+  ): DigestAuthenticator =
+    DigestAuthenticator(
+      DigestAuthenticatorConfiguration(config, passwordRetriever)
+    )
 
-  def challenge(context: AuthenticationContext): Map[String, String] =
-    new DigestAuthenticator(DigestAuthenticatorConfiguration(Future.successful))
-      .challenge(context)
+  def challenge(
+      context: AuthenticationContext,
+      config: Config
+  ): Map[String, String] =
+    new DigestAuthenticator(
+      DigestAuthenticatorConfiguration(config, Future.successful)
+    ).challenge(context)
 }
 
 final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)

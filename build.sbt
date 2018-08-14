@@ -13,3 +13,4 @@ scalafmtOnCompile := true
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.5"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "commons-codec" % "commons-codec" % "1.11"
+libraryDependencies += "com.typesafe" % "config" % "1.3.2"

@@ -5,16 +5,21 @@ import com.github.jarlah.authenticscala.{
   AuthenticationResult,
   Authenticator
 }
+import com.typesafe.config.Config
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object BasicAuthenticator {
-  def apply(retriever: PasswordRetriever): BasicAuthenticator =
-    BasicAuthenticator(BasicAuthenticatorConfiguration(retriever))
+  def apply(retriever: PasswordRetriever, config: Config): BasicAuthenticator =
+    BasicAuthenticator(BasicAuthenticatorConfiguration(config, retriever))
 
-  def challenge(context: AuthenticationContext): Map[String, String] =
-    BasicAuthenticator(BasicAuthenticatorConfiguration(Future.successful))
-      .challenge(context)
+  def challenge(
+      context: AuthenticationContext,
+      config: Config
+  ): Map[String, String] =
+    BasicAuthenticator(
+      BasicAuthenticatorConfiguration(config, Future.successful)
+    ).challenge(context)
 }
 
 final case class BasicAuthenticator(config: BasicAuthenticatorConfiguration)
