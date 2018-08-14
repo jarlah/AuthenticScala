@@ -1,6 +1,6 @@
 package com.github.jarlah.authenticscala.utils
 
-object Basic64Utils {
+object Base64Utils {
 
   def encode(text: String): String =
     new String(java.util.Base64.getEncoder.encode(text.getBytes()))
