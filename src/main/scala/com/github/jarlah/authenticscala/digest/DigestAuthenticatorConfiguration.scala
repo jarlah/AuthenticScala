@@ -22,7 +22,7 @@ object DigestAuthenticatorConfiguration {
   type PasswordRetriever = String => Future[String]
 
   def apply(
-      retriever: PasswordRetriever
+      retriever: PasswordRetriever = _ => Future.successful("")
   ): DigestAuthenticatorConfiguration =
     new DigestAuthenticatorConfiguration {
       override val passwordRetriever: PasswordRetriever = retriever
