@@ -3,7 +3,6 @@ package com.github.jarlah.authenticscala
 import com.github.jarlah.authenticscala.Authenticator.PasswordRetriever
 import com.github.jarlah.authenticscala.basic.BasicAuthenticator
 import com.github.jarlah.authenticscala.digest.DigestAuthenticator
-import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,8 +25,6 @@ object Authenticator {
   case object Basic  extends Mode
 
   type PasswordRetriever = String => Future[String]
-
-  val conf: Config = ConfigFactory.load.getConfig("authentic")
 
   def authenticate(
       context: AuthenticationContext,
