@@ -12,9 +12,7 @@ trait Authenticator[T <: AuthenticatorConfiguration] {
   def authenticate(
       context: AuthenticationContext,
       passwordRetriever: PasswordRetriever
-  )(
-      implicit ec: ExecutionContext
-  ): Future[AuthenticationResult]
+  )(implicit ec: ExecutionContext): Future[AuthenticationResult]
 
   def challenge(context: AuthenticationContext): Map[String, String]
 }
@@ -30,9 +28,7 @@ object Authenticator {
       context: AuthenticationContext,
       retriever: PasswordRetriever,
       mode: Mode
-  )(
-      implicit ec: ExecutionContext
-  ): Future[AuthenticationResult] = {
+  )(implicit ec: ExecutionContext): Future[AuthenticationResult] = {
     mode match {
       case Digest => DigestAuthenticator().authenticate(context, retriever)
       case Basic  => BasicAuthenticator().authenticate(context, retriever)
