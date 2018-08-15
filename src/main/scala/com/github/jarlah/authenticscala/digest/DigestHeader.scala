@@ -33,13 +33,16 @@ case class DigestHeader(
     }
     val hash1 = DigestUtils.md5Hex(s"$userName:$realm:$password")
     val hash2 = DigestUtils.md5Hex(s"$verb:$uri")
+    response == createResponse(hash1, hash2)
+  }
 
+  private def createResponse(hash1: String, hash2: String): String = {
     if (qualityOfProtection == Authentication) {
-      response == DigestUtils.md5Hex(
-        s"$hash1:$nonce:${"%08d".format(requestCounter)}:$clientNonce:${qualityOfProtection.name}:$hash2"
-      )
+      val nc  = "%08d".format(requestCounter)
+      val qop = qualityOfProtection.name
+      DigestUtils.md5Hex(s"$hash1:$nonce:$nc:$clientNonce:$qop:$hash2")
     } else {
-      response == DigestUtils.md5Hex(s"$hash1:$nonce:$hash2")
+      DigestUtils.md5Hex(s"$hash1:$nonce:$hash2")
     }
   }
 }

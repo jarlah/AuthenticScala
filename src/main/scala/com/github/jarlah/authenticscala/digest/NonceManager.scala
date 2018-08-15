@@ -1,33 +1,30 @@
 package com.github.jarlah.authenticscala.digest
-import com.github.jarlah.authenticscala.utils.{Base64Utils, DigestUtils}
+import com.github.jarlah.authenticscala.utils.Base64Utils
 
 object NonceManager {
-  def generate(
-      remoteAddress: String,
-      privateHashEncoder: PrivateHashEncoder
-  ): String = {
-    val dateTimeInMilliSecondsString = System.currentTimeMillis()
-    val privateHash =
-      privateHashEncoder.encode(dateTimeInMilliSecondsString, remoteAddress)
-    Base64Utils.encode(s"$dateTimeInMilliSecondsString:$privateHash")
+  def generate(remoteAddress: String, encoder: PrivateHashEncoder): String = {
+    val currentTime = System.currentTimeMillis()
+    val privateHash = encoder.encode(currentTime, remoteAddress)
+    Base64Utils.encode(s"$currentTime:$privateHash")
   }
 
   def validate(
       nonce: String,
       remoteAddress: String,
-      privateHashEncoder: PrivateHashEncoder
+      encoder: PrivateHashEncoder
   ): Boolean = {
-    val str          = Base64Utils.decode(nonce)
-    val decodedParts = str.split(":")
-    val md5EncodedString =
-      privateHashEncoder.encode(decodedParts(0).toLong, remoteAddress)
-    decodedParts(1).equals(md5EncodedString)
+    val str              = Base64Utils.decode(nonce)
+    val decodedParts     = str.split(":")
+    val timestampPart    = decodedParts(0).toLong
+    val md5EncodedString = encoder.encode(timestampPart, remoteAddress)
+    val encodedPart      = decodedParts(1)
+    encodedPart.equals(md5EncodedString)
   }
 
   def stale(nonce: String, timeoutInMillis: Long): Boolean = {
-    val decodedParts        = Base64Utils.decode(nonce).split(":")
-    val millisFromNonce     = decodedParts(0).toLong
-    val currentTimeInMillis = System.currentTimeMillis()
-    (millisFromNonce + timeoutInMillis) < currentTimeInMillis
+    val decodedParts  = Base64Utils.decode(nonce).split(":")
+    val timeFromNonce = decodedParts(0).toLong
+    val currentTime   = System.currentTimeMillis()
+    (timeFromNonce + timeoutInMillis) < currentTime
   }
 }
