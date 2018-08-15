@@ -6,26 +6,18 @@ import com.github.jarlah.authenticscala.{
   AuthenticationResult,
   Authenticator
 }
-import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object DigestAuthenticator {
-  def apply(
-      passwordRetriever: PasswordRetriever,
-      config: Config
-  ): DigestAuthenticator =
-    DigestAuthenticator(
-      DigestAuthenticatorConfiguration(config, passwordRetriever)
-    )
+  val config = DigestAuthenticatorConfiguration(ConfigFactory.load)
 
-  def challenge(
-      context: AuthenticationContext,
-      config: Config
-  ): Map[String, String] =
-    new DigestAuthenticator(
-      DigestAuthenticatorConfiguration(config, Future.successful)
-    ).challenge(context)
+  def apply(): DigestAuthenticator =
+    DigestAuthenticator(config)
+
+  def challenge(context: AuthenticationContext): Map[String, String] =
+    DigestAuthenticator().challenge(context)
 }
 
 final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
@@ -34,14 +26,14 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
   private val privateHashEncoder = PrivateHashEncoder(config.noncePrivateKey)
 
   def authenticate(
-      context: AuthenticationContext
+      context: AuthenticationContext,
+      passwordRetriever: PasswordRetriever
   )(implicit ec: ExecutionContext): Future[AuthenticationResult] = {
     val authHeader = context.httpHeaders.getOrElse("Authorization", "")
     DigestAuthHeaderParser
       .extractDigestHeader(context.httpMethod, authHeader) match {
       case Right(digestHeader) =>
-        config
-          .passwordRetriever(digestHeader.userName)
+        passwordRetriever(digestHeader.userName)
           .map(
             userPassword => {
               if (NonceManager.validate( // nonce is valid

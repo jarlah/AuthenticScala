@@ -1,5 +1,6 @@
 package com.github.jarlah.authenticscala
 
+import com.github.jarlah.authenticscala.Authenticator.PasswordRetriever
 import com.github.jarlah.authenticscala.basic.BasicAuthenticator
 import com.github.jarlah.authenticscala.digest.DigestAuthenticator
 import com.typesafe.config.{Config, ConfigFactory}
@@ -9,7 +10,10 @@ import scala.concurrent.{ExecutionContext, Future}
 trait Authenticator[T <: AuthenticatorConfiguration] {
   val config: T
 
-  def authenticate(context: AuthenticationContext)(
+  def authenticate(
+      context: AuthenticationContext,
+      passwordRetriever: PasswordRetriever
+  )(
       implicit ec: ExecutionContext
   ): Future[AuthenticationResult]
 
@@ -33,8 +37,8 @@ object Authenticator {
       implicit ec: ExecutionContext
   ): Future[AuthenticationResult] = {
     mode match {
-      case Digest => DigestAuthenticator(retriever, conf).authenticate(context)
-      case Basic  => BasicAuthenticator(retriever, conf).authenticate(context)
+      case Digest => DigestAuthenticator().authenticate(context, retriever)
+      case Basic  => BasicAuthenticator().authenticate(context, retriever)
     }
   }
 
@@ -43,7 +47,7 @@ object Authenticator {
       mode: Mode
   ): Map[String, String] =
     mode match {
-      case Digest => DigestAuthenticator.challenge(context, conf)
-      case Basic  => BasicAuthenticator.challenge(context, conf)
+      case Digest => DigestAuthenticator.challenge(context)
+      case Basic  => BasicAuthenticator.challenge(context)
     }
 }

@@ -1,25 +1,19 @@
 package com.github.jarlah.authenticscala.digest
 
-import com.github.jarlah.authenticscala.Authenticator.PasswordRetriever
 import com.github.jarlah.authenticscala.AuthenticatorConfiguration
 import com.typesafe.config.Config
 
 abstract class DigestAuthenticatorConfiguration()
     extends AuthenticatorConfiguration {
-  val passwordRetriever: PasswordRetriever
   val noncePrivateKey: String
   val nonceValidInMillis: Long
   val realm: String
 }
 
 object DigestAuthenticatorConfiguration {
-  def apply(
-      config: Config,
-      retriever: PasswordRetriever
-  ): DigestAuthenticatorConfiguration = {
-    val digestConfig = config.getConfig("digest")
+  def apply(config: Config): DigestAuthenticatorConfiguration = {
+    val digestConfig = config.getConfig("authentic.digest")
     new DigestAuthenticatorConfiguration() {
-      override val passwordRetriever: PasswordRetriever = retriever
       override val noncePrivateKey: String =
         digestConfig.getString("nonce.privateKey")
       override val nonceValidInMillis: Long =

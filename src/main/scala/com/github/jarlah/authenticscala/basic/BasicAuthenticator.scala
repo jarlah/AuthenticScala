@@ -5,33 +5,33 @@ import com.github.jarlah.authenticscala.{
   AuthenticationResult,
   Authenticator
 }
-import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object BasicAuthenticator {
-  def apply(retriever: PasswordRetriever, config: Config): BasicAuthenticator =
-    BasicAuthenticator(BasicAuthenticatorConfiguration(config, retriever))
+  val config = BasicAuthenticatorConfiguration(ConfigFactory.load)
 
-  def challenge(
-      context: AuthenticationContext,
-      config: Config
-  ): Map[String, String] =
-    BasicAuthenticator(
-      BasicAuthenticatorConfiguration(config, Future.successful)
-    ).challenge(context)
+  def apply(): BasicAuthenticator =
+    BasicAuthenticator(config)
+
+  def challenge(context: AuthenticationContext): Map[String, String] =
+    BasicAuthenticator().challenge(context)
 }
 
 final case class BasicAuthenticator(config: BasicAuthenticatorConfiguration)
     extends Authenticator[BasicAuthenticatorConfiguration] {
 
-  def authenticate(context: AuthenticationContext)(
+  def authenticate(
+      context: AuthenticationContext,
+      passwordRetriever: PasswordRetriever
+  )(
       implicit ec: ExecutionContext
   ): Future[AuthenticationResult] = {
     val authHeader = context.httpHeaders.getOrElse("Authorization", "")
     BasicAuthHeaderParser.extractBasicHeader(authHeader) match {
       case Right(basicHeader) =>
-        config.passwordRetriever
+        passwordRetriever
           .apply(basicHeader.username)
           .map {
             case userSecret if userSecret.equals(basicHeader.password) =>

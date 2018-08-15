@@ -11,11 +11,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.FiniteDuration
 
 class DigestAuthenticatorTest extends FlatSpec {
-  val authenticator =
-    DigestAuthenticator(
-      u => Future.successful(u),
-      ConfigFactory.load.getConfig("authentic")
-    )
+  val authenticator = DigestAuthenticator()
+
+  val passwordRetriever = (u: String) => Future.successful(u)
 
   val timeout = FiniteDuration(1, TimeUnit.SECONDS)
 
@@ -27,7 +25,7 @@ class DigestAuthenticatorTest extends FlatSpec {
       "127.0.0.1"
     )
     val result = Await.result(
-      authenticator.authenticate(context),
+      authenticator.authenticate(context, u => Future.successful(u)),
       timeout
     )
     assert(!result.success)
@@ -53,7 +51,7 @@ class DigestAuthenticatorTest extends FlatSpec {
       "127.0.0.1"
     )
     val result = Await.result(
-      authenticator.authenticate(context),
+      authenticator.authenticate(context, passwordRetriever),
       timeout
     )
     assert(!result.success)
