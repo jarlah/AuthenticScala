@@ -55,17 +55,17 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
                 AuthenticationResult(
                   success = false,
                   principal = None,
-                  errorMessage = None
+                  errorMessage = Some("Invalid credentials")
                 )
               }
             }
           )
           .recover {
-            case e: Throwable =>
+            case _: Throwable =>
               AuthenticationResult(
                 success = false,
                 principal = None,
-                errorMessage = Some(e.getLocalizedMessage)
+                errorMessage = Some("A server error occurred")
               )
           }
       case None =>

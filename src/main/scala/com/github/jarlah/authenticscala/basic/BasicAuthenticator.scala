@@ -41,7 +41,7 @@ final case class BasicAuthenticator(config: BasicAuthenticatorConfiguration)
               AuthenticationResult(
                 success = false,
                 None,
-                Some("Wrong username or password")
+                Some("Invalid credentials")
               )
           }
           .recover {
@@ -49,7 +49,7 @@ final case class BasicAuthenticator(config: BasicAuthenticatorConfiguration)
               AuthenticationResult(
                 success = false,
                 None,
-                Some("Unable to retrieve password")
+                Some("A server error occurred")
               )
           }
       case None =>
