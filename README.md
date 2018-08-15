@@ -2,4 +2,8 @@
 
 [![](https://jitpack.io/v/jarlah/AuthenticScala.svg)](https://jitpack.io/#jarlah/AuthenticScala)
 
-A Scala clone of the abandoned Authentic project @ https://github.com/Iristyle/Authentic
+Not built for any specific framework or language.
+
+Small, reusable and lightweight.
+
+I haven't used too much time on it. It currently does what i need. 
