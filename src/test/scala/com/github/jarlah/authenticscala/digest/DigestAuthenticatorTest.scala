@@ -2,7 +2,8 @@ package com.github.jarlah.authenticscala.digest
 
 import java.util.concurrent.TimeUnit
 
-import com.github.jarlah.authenticscala.AuthenticationContext
+import com.github.jarlah.authenticscala.Authenticator.PasswordRetriever
+import com.github.jarlah.authenticscala.{AuthenticationContext, Authenticator}
 import org.scalatest.FlatSpec
 
 import scala.concurrent.{Await, Future}
@@ -10,9 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.FiniteDuration
 
 class DigestAuthenticatorTest extends FlatSpec {
-  val authenticator = DigestAuthenticator()
-
-  val retriever = (u: String) => Future.successful(u)
+  val retriever: PasswordRetriever = (u: String) => Future.successful(u)
 
   val timeout = FiniteDuration(1, TimeUnit.SECONDS)
 
@@ -24,7 +23,7 @@ class DigestAuthenticatorTest extends FlatSpec {
       "127.0.0.1"
     )
     val result = Await.result(
-      authenticator.authenticate(context, u => Future.successful(u)),
+      Authenticator.authenticate(context, retriever, "digest"),
       timeout
     )
     assert(!result.success)
@@ -46,11 +45,11 @@ class DigestAuthenticatorTest extends FlatSpec {
       "127.0.0.1"
     )
     val result = Await.result(
-      authenticator.authenticate(context, retriever),
+      Authenticator.authenticate(context, retriever, "digest"),
       timeout
     )
     assert(!result.success)
-    assert(result.errorMessage.isEmpty)
+    assert(result.errorMessage.contains("Invalid credentials"))
   }
 
   "challenge" should "create none empty map" in {
@@ -60,6 +59,6 @@ class DigestAuthenticatorTest extends FlatSpec {
       Map(),
       "127.0.0.1"
     )
-    assert(authenticator.challenge(context).nonEmpty)
+    assert(Authenticator.challenge(context, "digest").nonEmpty)
   }
 }
