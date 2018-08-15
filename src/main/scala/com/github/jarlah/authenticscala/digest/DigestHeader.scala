@@ -31,7 +31,7 @@ final case class DigestHeader(
   }
 
   private[this] def createResponse(hash1: String, hash2: String): String = {
-    if (qualityOfProtection == Authentication) {
+    if (qualityOfProtection == Auth) {
       val nc  = "%08d".format(requestCounter)
       val qop = qualityOfProtection.name
       DigestUtils.md5Hex(s"$hash1:$nonce:$nc:$clientNonce:$qop:$hash2")

@@ -40,15 +40,20 @@ object DigestAuthHeaderParser {
           .get("qop")
           .map(_.replace(" ", ""))
           .map {
-            case "auth"          => Authentication
-            case "auth-int"      => AuthenticationWithIntegrity
-            case "auth,auth-int" => AuthenticationWithIntegrity
+            case Auth.name                       => Auth
+            case qop if isAuthWithIntegrity(qop) => AuthWithIntegrity
           }
-          .getOrElse(Authentication),
+          .getOrElse(Auth),
         opaque = headerDictionary.getOrElse("opaque", "")
       )
     )
   }
+
+  private[this] def isAuthWithIntegrity(qop: String) =
+    qop == AuthWithIntegrity.name || qop == Seq(
+      Auth.name,
+      AuthWithIntegrity.name
+    ).mkString(",")
 
   private[this] def headerValue(authHeader: String) =
     authHeader.substring("Digest".length + 1)
