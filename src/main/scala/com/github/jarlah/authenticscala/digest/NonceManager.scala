@@ -21,10 +21,10 @@ object NonceManager {
     encodedPart == md5EncodedString
   }
 
-  def stale(nonce: String, timeoutInMillis: Long): Boolean = {
+  def stale(nonce: String, timeout: Long): Boolean = {
     val decodedParts  = Base64Utils.decode(nonce).split(":")
     val timeFromNonce = decodedParts(0).toLong
     val currentTime   = System.currentTimeMillis()
-    (timeFromNonce + timeoutInMillis) < currentTime
+    (timeFromNonce + timeout) < currentTime
   }
 }

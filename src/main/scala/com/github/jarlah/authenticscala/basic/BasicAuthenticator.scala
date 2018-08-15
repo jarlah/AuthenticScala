@@ -25,12 +25,9 @@ final case class BasicAuthenticator(config: BasicAuthenticatorConfiguration)
   def authenticate(
       context: AuthenticationContext,
       passwordRetriever: PasswordRetriever
-  )(
-      implicit ec: ExecutionContext
-  ): Future[AuthenticationResult] = {
-    val authHeader = context.httpHeaders.getOrElse("Authorization", "")
-    BasicAuthHeaderParser.extractBasicHeader(authHeader) match {
-      case Right(basicHeader) =>
+  )(implicit ec: ExecutionContext): Future[AuthenticationResult] =
+    BasicAuthHeaderParser.extractBasicHeader(context.getAuthHeader) match {
+      case Some(basicHeader) =>
         passwordRetriever
           .apply(basicHeader.username)
           .map {
@@ -55,16 +52,15 @@ final case class BasicAuthenticator(config: BasicAuthenticatorConfiguration)
                 Some("Unable to retrieve password")
               )
           }
-      case Left(error) =>
+      case None =>
         Future.successful(
           AuthenticationResult(
             success = false,
             principal = None,
-            errorMessage = Some(error)
+            errorMessage = None
           )
         )
     }
-  }
 
   def challenge(context: AuthenticationContext): Map[String, String] =
     Map("WWW-Authenticate" -> s"""Basic realm="${config.realm}"""")

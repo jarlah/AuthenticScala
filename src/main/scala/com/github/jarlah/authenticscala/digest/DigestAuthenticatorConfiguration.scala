@@ -5,20 +5,19 @@ import com.typesafe.config.Config
 
 abstract class DigestAuthenticatorConfiguration()
     extends AuthenticatorConfiguration {
-  val noncePrivateKey: String
-  val nonceValidInMillis: Long
+  val encoder: PrivateHashEncoder
+  val nonceTimeout: Long
   val realm: String
 }
 
 object DigestAuthenticatorConfiguration {
   def apply(config: Config): DigestAuthenticatorConfiguration = {
-    val digestConfig = config.getConfig("authentic.digest")
+    val conf = config.getConfig("authentic.digest")
     new DigestAuthenticatorConfiguration() {
-      override val noncePrivateKey: String =
-        digestConfig.getString("nonce.privateKey")
-      override val nonceValidInMillis: Long =
-        digestConfig.getLong("nonce.validInMillis")
-      override val realm: String = digestConfig.getString("realm")
+      override val nonceTimeout: Long = conf.getLong("nonce.timeout")
+      override val realm: String      = conf.getString("realm")
+      private val noncePrivateKey     = conf.getString("nonce.privateKey")
+      override val encoder            = PrivateHashEncoder(noncePrivateKey)
     }
   }
 }

@@ -5,4 +5,6 @@ case class AuthenticationContext(
     httpUri: String,
     httpHeaders: Map[String, String],
     remoteAddress: String
-)
+) {
+  def getAuthHeader: String = httpHeaders.getOrElse("Authorization", "")
+}

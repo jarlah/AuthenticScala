@@ -7,8 +7,10 @@ import com.github.jarlah.authenticscala.{
   Authenticator
 }
 import com.typesafe.config.ConfigFactory
-
 import scala.concurrent.{ExecutionContext, Future}
+import DigestAuthHeaderParser._
+import NonceManager._
+import OpaqueManager._
 
 object DigestAuthenticator {
   val config = DigestAuthenticatorConfiguration(ConfigFactory.load)
@@ -23,34 +25,30 @@ object DigestAuthenticator {
 final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
     extends Authenticator[DigestAuthenticatorConfiguration] {
 
-  private val privateHashEncoder = PrivateHashEncoder(config.noncePrivateKey)
-
   def authenticate(
       context: AuthenticationContext,
-      passwordRetriever: PasswordRetriever
+      retriever: PasswordRetriever
   )(implicit ec: ExecutionContext): Future[AuthenticationResult] = {
-    val authHeader = context.httpHeaders.getOrElse("Authorization", "")
-    DigestAuthHeaderParser
-      .extractDigestHeader(context.httpMethod, authHeader) match {
-      case Right(digestHeader) =>
-        passwordRetriever(digestHeader.userName)
+    getHeader(context) match {
+      case Some(header) =>
+        retriever(header.userName)
           .map(
             userPassword => {
-              if (NonceManager.validate( // nonce is valid
-                    digestHeader.nonce,
+              if (validate( // nonce is valid
+                    header.nonce,
                     context.remoteAddress,
-                    privateHashEncoder
-                  ) && !NonceManager.stale( // nonce is not stale
-                    digestHeader.nonce,
-                    config.nonceValidInMillis
-                  ) && digestHeader.matchesCredentials( // credentials match
+                    config.encoder
+                  ) && !stale( // nonce is not stale
+                    header.nonce,
+                    config.nonceTimeout
+                  ) && header.matchesCredentials( // credentials match
                     config.realm,
-                    OpaqueManager.generate(digestHeader.nonce),
+                    getOpaque(header.nonce),
                     userPassword
                   )) {
                 AuthenticationResult(
                   success = true,
-                  principal = Some(digestHeader.userName),
+                  principal = Some(header.userName),
                   errorMessage = None
                 )
               } else {
@@ -70,39 +68,38 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
                 errorMessage = Some(e.getLocalizedMessage)
               )
           }
-
-      case Left(error) =>
+      case None =>
         Future.successful(
           AuthenticationResult(
             success = false,
             principal = None,
-            errorMessage = Some(error)
+            errorMessage = None
           )
         )
     }
+
   }
 
   def challenge(context: AuthenticationContext): Map[String, String] = {
-    val authHeader = context.httpHeaders.getOrElse("Authorization", "")
-    val stale = DigestAuthHeaderParser
-      .extractDigestHeader(context.httpMethod, authHeader) match {
-      case Right(digestHeader) =>
-        NonceManager.validate(
-          digestHeader.nonce,
+    val isStale = getHeader(context).exists(
+      header =>
+        validate(
+          header.nonce,
           context.remoteAddress,
-          privateHashEncoder
-        ) && NonceManager.stale(
-          digestHeader.nonce,
-          config.nonceValidInMillis
-        )
-      case _ =>
-        false
-    }
-    val nonce  = NonceManager.generate(context.remoteAddress, privateHashEncoder)
-    val opaque = OpaqueManager.generate(nonce)
+          config.encoder
+        ) && stale(
+          header.nonce,
+          config.nonceTimeout
+      )
+    )
+    val nonce  = generate(context.remoteAddress, config.encoder)
+    val opaque = getOpaque(nonce)
     Map(
       "WWW-Authenticate" ->
-        s"""Digest realm="${config.realm}", nonce="$nonce", opaque="$opaque", stale=$stale, algorithm=MD5, qop="auth""""
+        s"""Digest realm="${config.realm}", nonce="$nonce", opaque="$opaque", stale=$isStale, algorithm=MD5, qop="auth""""
     )
   }
+
+  private[this] def getHeader(context: AuthenticationContext) =
+    extractDigestHeader(context.httpMethod, context.getAuthHeader)
 }

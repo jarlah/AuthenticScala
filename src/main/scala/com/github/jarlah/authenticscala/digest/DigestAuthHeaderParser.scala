@@ -4,30 +4,17 @@ object DigestAuthHeaderParser {
   def extractDigestHeader(
       verb: String,
       authHeader: String
-  ): Either[String, DigestHeader] = {
+  ): Option[DigestHeader] = {
 
-    if (null == authHeader) {
-      return Left("Missing authHeader")
+    if (null == authHeader
+        || null == verb
+        || authHeader.isEmpty
+        || !authHeader.startsWith("Digest")
+        || headerValue(authHeader).isEmpty) {
+      return None
     }
 
-    if (null == verb) {
-      return Left("Missing verb")
-    }
-
-    if (authHeader.isEmpty || !authHeader.startsWith("Digest")) {
-      return Left(
-        "AuthHeader cannot be null or empty OR does not start with Digest"
-      )
-    }
-
-    val keyValuePairs = authHeader.substring(7)
-    if (keyValuePairs.isEmpty) {
-      return Left(
-        "Authorization header did not contain any data other than Digest"
-      )
-    }
-
-    val headerDictionary: Map[String, String] = keyValuePairs
+    val headerDictionary: Map[String, String] = headerValue(authHeader)
       .split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
       .map(pair => {
         val firstEqualIndex = pair.indexOf("=")
@@ -39,25 +26,30 @@ object DigestAuthHeaderParser {
       })
       .toMap
 
-    DigestHeader(
-      verb = verb,
-      userName = headerDictionary.getOrElse("username", ""),
-      realm = headerDictionary.getOrElse("realm", ""),
-      uri = headerDictionary.getOrElse("uri", ""),
-      nonce = headerDictionary.getOrElse("nonce", ""),
-      requestCounter = headerDictionary.get("nc").map(_.toInt).getOrElse(0),
-      clientNonce = headerDictionary.getOrElse("cnonce", ""),
-      response = headerDictionary.getOrElse("response", ""),
-      qualityOfProtection = headerDictionary
-        .get("qop")
-        .map(_.replace(" ", ""))
-        .map {
-          case "auth"          => Authentication
-          case "auth-int"      => AuthenticationWithIntegrity
-          case "auth,auth-int" => AuthenticationWithIntegrity
-        }
-        .getOrElse(Authentication),
-      opaque = headerDictionary.getOrElse("opaque", "")
+    Some(
+      DigestHeader(
+        verb = verb,
+        userName = headerDictionary.getOrElse("username", ""),
+        realm = headerDictionary.getOrElse("realm", ""),
+        uri = headerDictionary.getOrElse("uri", ""),
+        nonce = headerDictionary.getOrElse("nonce", ""),
+        requestCounter = headerDictionary.get("nc").map(_.toInt).getOrElse(0),
+        clientNonce = headerDictionary.getOrElse("cnonce", ""),
+        response = headerDictionary.getOrElse("response", ""),
+        qualityOfProtection = headerDictionary
+          .get("qop")
+          .map(_.replace(" ", ""))
+          .map {
+            case "auth"          => Authentication
+            case "auth-int"      => AuthenticationWithIntegrity
+            case "auth,auth-int" => AuthenticationWithIntegrity
+          }
+          .getOrElse(Authentication),
+        opaque = headerDictionary.getOrElse("opaque", "")
+      )
     )
   }
+
+  private[this] def headerValue(authHeader: String) =
+    authHeader.substring("Digest".length + 1)
 }

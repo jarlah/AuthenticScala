@@ -4,5 +4,5 @@ import com.github.jarlah.authenticscala.utils.DigestUtils
 trait OpaqueManager {}
 
 object OpaqueManager {
-  def generate(nonce: String): String = DigestUtils.md5Hex(nonce)
+  def getOpaque(nonce: String): String = DigestUtils.md5Hex(nonce)
 }
