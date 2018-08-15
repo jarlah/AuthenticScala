@@ -18,7 +18,7 @@ object NonceManager {
     val timestampPart    = decodedParts(0).toLong
     val md5EncodedString = encoder.encode(timestampPart, remoteAddress)
     val encodedPart      = decodedParts(1)
-    encodedPart.equals(md5EncodedString)
+    encodedPart == md5EncodedString
   }
 
   def stale(nonce: String, timeoutInMillis: Long): Boolean = {
