@@ -1,7 +1,7 @@
 package com.github.jarlah.authenticscala.digest
 import com.github.jarlah.authenticscala.utils.DigestUtils
 
-case class DigestHeader(
+final case class DigestHeader(
     verb: String,
     userName: String,
     realm: String,

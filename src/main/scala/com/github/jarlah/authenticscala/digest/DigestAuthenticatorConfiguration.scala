@@ -3,7 +3,7 @@ package com.github.jarlah.authenticscala.digest
 import com.github.jarlah.authenticscala.AuthenticatorConfiguration
 import com.typesafe.config.Config
 
-case class DigestAuthenticatorConfiguration(
+final case class DigestAuthenticatorConfiguration(
     encoder: PrivateHashEncoder,
     nonceTimeout: Long,
     realm: String
