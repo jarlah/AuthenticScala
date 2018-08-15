@@ -5,6 +5,7 @@ import com.github.jarlah.authenticscala.basic.BasicAuthenticator
 import com.github.jarlah.authenticscala.digest.DigestAuthenticator
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.implicitConversions
 
 trait Authenticator[T <: AuthenticatorConfiguration] {
   val config: T
@@ -24,6 +25,19 @@ object Authenticator {
 
   type PasswordRetriever = String => Future[String]
 
+  implicit def fromStringToMode(mode: String): Mode =
+    mode.toLowerCase match {
+      case "digest" => Digest
+      case "basic"  => Basic
+    }
+
+  def authenticate(
+      context: AuthenticationContext,
+      retriever: PasswordRetriever,
+      mode: String
+  )(implicit ec: ExecutionContext): Future[AuthenticationResult] =
+    authenticate(context, retriever, mode: Mode)
+
   def authenticate(
       context: AuthenticationContext,
       retriever: PasswordRetriever,
@@ -34,6 +48,11 @@ object Authenticator {
       case Basic  => BasicAuthenticator().authenticate(context, retriever)
     }
   }
+  def challenge(
+      context: AuthenticationContext,
+      mode: String
+  ): Map[String, String] =
+    challenge(context, mode: Mode)
 
   def challenge(
       context: AuthenticationContext,
