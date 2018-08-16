@@ -1,7 +1,9 @@
 package com.github.jarlah.authenticscala.digest
 
-object DigestAuthHeaderParser extends App {
-  private val headerPrefix = "Digest "
+import com.github.jarlah.authenticscala.AuthenticatorParser
+
+object DigestAuthHeaderParser extends AuthenticatorParser {
+  val headerPrefix = "Digest"
 
   def extractDigestHeader(
       verb: String,
@@ -56,14 +58,4 @@ object DigestAuthHeaderParser extends App {
       Auth.name,
       AuthWithIntegrity.name
     ).mkString(",")
-
-  private[this] def getHeaderValue(authHeader: String): Option[String] =
-    Option {
-      if (null == authHeader
-          || authHeader.isEmpty
-          || !authHeader.startsWith(headerPrefix)) {
-        return null
-      }
-      authHeader.substring(headerPrefix.length)
-    }
 }
