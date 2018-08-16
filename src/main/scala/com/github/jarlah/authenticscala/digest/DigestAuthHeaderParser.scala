@@ -1,6 +1,6 @@
 package com.github.jarlah.authenticscala.digest
 
-object DigestAuthHeaderParser {
+object DigestAuthHeaderParser extends App {
   private val headerPrefix = "Digest "
 
   def extractDigestHeader(
@@ -8,17 +8,7 @@ object DigestAuthHeaderParser {
       authHeader: String
   ): Option[DigestHeader] = {
     getHeaderValue(authHeader).map(headerValue => {
-      val headerDictionary: Map[String, String] = headerValue
-        .split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
-        .map(pair => {
-          val firstEqualIndex = pair.indexOf("=")
-          val key =
-            pair.substring(0, firstEqualIndex).trim().replaceAll("\"", "").trim
-          val value =
-            pair.substring(firstEqualIndex + 1).trim().replaceAll("\"", "").trim
-          (key, value)
-        })
-        .toMap
+      val headerDictionary = getHeaderDictionary(headerValue)
       DigestHeader(
         verb = verb,
         userName = headerDictionary.getOrElse("username", ""),
@@ -41,7 +31,29 @@ object DigestAuthHeaderParser {
     })
   }
 
-  private[this] def isAuthWithIntegrity(qop: String) =
+  private[this] def getHeaderDictionary(
+      headerValue: String
+  ): Map[String, String] = {
+    headerValue
+      .split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
+      .flatMap(pair => {
+        val equalSign = pair.indexOf("=")
+        if (equalSign > -1) {
+          val key =
+            pair.substring(0, equalSign).trim().replaceAll("\"", "").trim
+          val value =
+            pair.substring(equalSign + 1).trim().replaceAll("\"", "").trim
+          Some((key, value))
+        } else {
+          None
+        }
+      })
+      .toMap
+  }
+
+  println(getHeaderDictionary(""))
+
+  private[this] def isAuthWithIntegrity(qop: String): Boolean =
     qop == AuthWithIntegrity.name || qop == Seq(
       Auth.name,
       AuthWithIntegrity.name
