@@ -22,15 +22,17 @@ object DigestHeaderParser extends HeaderParser {
             requestCounter = dict.get("nc").map(_.toInt).getOrElse(0),
             clientNonce = dict.getOrElse("cnonce", ""),
             response = dict.getOrElse("response", ""),
-            qualityOfProtection = toQualityOfProtection(dict.get("qop")),
+            qualityOfProtection =
+              toQualityOfProtection(dict.getOrElse("qop", "")),
             opaque = dict.getOrElse("opaque", "")
         )
       )
 
   private[this] def toQualityOfProtection(
-      maybeQop: Option[String]
+      qopStr: String
   ): DigestQualityOfProtection =
-    maybeQop
+    Option(qopStr)
+      .filter(_.nonEmpty)
       .map(_.replace(" ", ""))
       .map {
         case Auth.name                       => Auth
