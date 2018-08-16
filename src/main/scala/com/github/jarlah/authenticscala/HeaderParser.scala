@@ -1,6 +1,6 @@
 package com.github.jarlah.authenticscala
 
-trait AuthenticatorParser {
+trait HeaderParser {
   val headerPrefix: String
 
   def getHeaderValue(authHeader: String): Option[String] =

@@ -7,7 +7,7 @@ import com.github.jarlah.authenticscala.digest.DigestAuthenticator
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
-trait Authenticator[T <: AuthenticatorConfiguration] {
+trait Authenticator[T <: Configuration] {
   val config: T
 
   def authenticate(

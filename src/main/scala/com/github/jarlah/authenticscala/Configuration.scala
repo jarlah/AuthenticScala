@@ -1,5 +1,5 @@
 package com.github.jarlah.authenticscala
 
-trait AuthenticatorConfiguration {
+trait Configuration {
   val realm: String
 }

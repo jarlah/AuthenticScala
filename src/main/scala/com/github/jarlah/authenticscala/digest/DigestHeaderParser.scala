@@ -1,8 +1,8 @@
 package com.github.jarlah.authenticscala.digest
 
-import com.github.jarlah.authenticscala.AuthenticatorParser
+import com.github.jarlah.authenticscala.HeaderParser
 
-object DigestAuthHeaderParser extends AuthenticatorParser {
+object DigestHeaderParser extends HeaderParser {
   val headerPrefix = "Digest"
 
   def extractDigestHeader(

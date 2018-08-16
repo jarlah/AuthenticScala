@@ -1,8 +1,8 @@
 package com.github.jarlah.authenticscala.basic
-import com.github.jarlah.authenticscala.AuthenticatorParser
+import com.github.jarlah.authenticscala.HeaderParser
 import com.github.jarlah.authenticscala.utils.Base64Utils
 
-object BasicAuthHeaderParser extends AuthenticatorParser {
+object BasicHeaderParser extends HeaderParser {
   val headerPrefix = "Basic "
 
   def extractBasicHeader(authHeader: String): Option[BasicHeader] =

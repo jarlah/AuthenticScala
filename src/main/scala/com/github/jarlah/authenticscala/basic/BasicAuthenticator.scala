@@ -7,10 +7,10 @@ import com.github.jarlah.authenticscala.{
 }
 import com.typesafe.config.ConfigFactory
 import scala.concurrent.{ExecutionContext, Future}
-import BasicAuthHeaderParser._
+import BasicHeaderParser._
 
 object BasicAuthenticator {
-  val config = BasicAuthenticatorConfiguration(ConfigFactory.load)
+  val config = BasicConfiguration(ConfigFactory.load)
 
   def apply(): BasicAuthenticator =
     BasicAuthenticator(config)
@@ -19,8 +19,8 @@ object BasicAuthenticator {
     BasicAuthenticator().challenge(context)
 }
 
-final case class BasicAuthenticator(config: BasicAuthenticatorConfiguration)
-    extends Authenticator[BasicAuthenticatorConfiguration] {
+final case class BasicAuthenticator(config: BasicConfiguration)
+    extends Authenticator[BasicConfiguration] {
 
   def authenticate(
       context: AuthenticationContext,

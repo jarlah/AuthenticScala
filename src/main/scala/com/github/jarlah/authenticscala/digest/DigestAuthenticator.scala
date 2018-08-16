@@ -8,12 +8,12 @@ import com.github.jarlah.authenticscala.{
 }
 import com.typesafe.config.ConfigFactory
 import scala.concurrent.{ExecutionContext, Future}
-import DigestAuthHeaderParser._
+import DigestHeaderParser._
 import NonceManager._
 import OpaqueManager._
 
 object DigestAuthenticator {
-  val config = DigestAuthenticatorConfiguration(ConfigFactory.load)
+  val config = DigestConfiguration(ConfigFactory.load)
 
   def apply(): DigestAuthenticator =
     DigestAuthenticator(config)
@@ -22,8 +22,8 @@ object DigestAuthenticator {
     DigestAuthenticator().challenge(context)
 }
 
-final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
-    extends Authenticator[DigestAuthenticatorConfiguration] {
+final case class DigestAuthenticator(config: DigestConfiguration)
+    extends Authenticator[DigestConfiguration] {
 
   def authenticate(
       context: AuthenticationContext,
