@@ -6,7 +6,7 @@ object DigestAuthHeaderParser extends App {
   def extractDigestHeader(
       verb: String,
       authHeader: String
-  ): Option[DigestHeader] = {
+  ): Option[DigestHeader] =
     getHeaderValue(authHeader)
       .map(getHeaderDictionary)
       .map(
@@ -31,11 +31,10 @@ object DigestAuthHeaderParser extends App {
             opaque = dictionary.getOrElse("opaque", "")
         )
       )
-  }
 
   private[this] def getHeaderDictionary(
       headerValue: String
-  ): Map[String, String] = {
+  ): Map[String, String] =
     headerValue
       .split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
       .flatMap(pair => {
@@ -51,7 +50,6 @@ object DigestAuthHeaderParser extends App {
         }
       })
       .toMap
-  }
 
   private[this] def isAuthWithIntegrity(qop: String): Boolean =
     qop == AuthWithIntegrity.name || qop == Seq(
@@ -59,12 +57,13 @@ object DigestAuthHeaderParser extends App {
       AuthWithIntegrity.name
     ).mkString(",")
 
-  private[this] def getHeaderValue(authHeader: String): Option[String] = {
-    if (null == authHeader
-        || authHeader.isEmpty
-        || !authHeader.startsWith(headerPrefix)) {
-      return None
+  private[this] def getHeaderValue(authHeader: String): Option[String] =
+    Option {
+      if (null == authHeader
+          || authHeader.isEmpty
+          || !authHeader.startsWith(headerPrefix)) {
+        return null
+      }
+      authHeader.substring(headerPrefix.length)
     }
-    Some(authHeader.substring(headerPrefix.length))
-  }
 }

@@ -42,12 +42,12 @@ object Authenticator {
       context: AuthenticationContext,
       retriever: PasswordRetriever,
       mode: Mode
-  )(implicit ec: ExecutionContext): Future[AuthenticationResult] = {
+  )(implicit ec: ExecutionContext): Future[AuthenticationResult] =
     mode match {
       case Digest => DigestAuthenticator().authenticate(context, retriever)
       case Basic  => BasicAuthenticator().authenticate(context, retriever)
     }
-  }
+
   def challenge(
       context: AuthenticationContext,
       mode: String

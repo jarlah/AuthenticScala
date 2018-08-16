@@ -6,8 +6,8 @@ import com.github.jarlah.authenticscala.{
   Authenticator
 }
 import com.typesafe.config.ConfigFactory
-
 import scala.concurrent.{ExecutionContext, Future}
+import BasicAuthHeaderParser._
 
 object BasicAuthenticator {
   val config = BasicAuthenticatorConfiguration(ConfigFactory.load)
@@ -26,41 +26,40 @@ final case class BasicAuthenticator(config: BasicAuthenticatorConfiguration)
       context: AuthenticationContext,
       passwordRetriever: PasswordRetriever
   )(implicit ec: ExecutionContext): Future[AuthenticationResult] =
-    BasicAuthHeaderParser.extractBasicHeader(context.getAuthHeader) match {
-      case Some(basicHeader) =>
-        passwordRetriever
-          .apply(basicHeader.username)
-          .map {
-            case userSecret if basicHeader.credentialsMatches(userSecret) =>
-              AuthenticationResult(
-                success = true,
-                principal = Some(basicHeader.username),
-                errorMessage = None
-              )
-            case _ =>
-              AuthenticationResult(
-                success = false,
-                None,
-                Some("Invalid credentials")
-              )
-          }
-          .recover {
-            case _: Throwable =>
-              AuthenticationResult(
-                success = false,
-                None,
-                Some("A server error occurred")
-              )
-          }
-      case None =>
-        Future.successful(
-          AuthenticationResult(
-            success = false,
-            principal = None,
-            errorMessage = None
-          )
+    extractBasicHeader(context.getAuthHeader).map { header =>
+      passwordRetriever
+        .apply(header.username)
+        .map {
+          case userSecret if header.credentialsMatches(userSecret) =>
+            AuthenticationResult(
+              success = true,
+              principal = Some(header.username),
+              errorMessage = None
+            )
+          case _ =>
+            AuthenticationResult(
+              success = false,
+              None,
+              Some("Invalid credentials")
+            )
+        }
+        .recover {
+          case _: Throwable =>
+            AuthenticationResult(
+              success = false,
+              None,
+              Some("A server error occurred")
+            )
+        }
+    }.getOrElse(
+      Future.successful(
+        AuthenticationResult(
+          success = false,
+          principal = None,
+          errorMessage = None
         )
-    }
+      )
+    )
 
   def challenge(context: AuthenticationContext): Map[String, String] =
     Map("WWW-Authenticate" -> s"""Basic realm="${config.realm}"""")

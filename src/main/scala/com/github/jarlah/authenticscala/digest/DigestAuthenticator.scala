@@ -28,57 +28,54 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
   def authenticate(
       context: AuthenticationContext,
       retriever: PasswordRetriever
-  )(implicit ec: ExecutionContext): Future[AuthenticationResult] = {
-    getHeader(context) match {
-      case Some(header) =>
-        retriever(header.userName)
-          .map(
-            userPassword => {
-              if (validate( // nonce is valid
-                    header.nonce,
-                    context.remoteAddress,
-                    config.encoder
-                  ) && !stale( // nonce is not stale
-                    header.nonce,
-                    config.nonceTimeout
-                  ) && header.matchesCredentials( // credentials match
-                    config.realm,
-                    getOpaque(header.nonce),
-                    userPassword
-                  )) {
-                AuthenticationResult(
-                  success = true,
-                  principal = Some(header.userName),
-                  errorMessage = None
-                )
-              } else {
-                AuthenticationResult(
-                  success = false,
-                  principal = None,
-                  errorMessage = Some("Invalid credentials")
-                )
-              }
-            }
-          )
-          .recover {
-            case _: Throwable =>
+  )(implicit ec: ExecutionContext): Future[AuthenticationResult] =
+    getHeader(context).map { header =>
+      retriever(header.userName)
+        .map(
+          userPassword => {
+            if (validate( // nonce is valid
+                  header.nonce,
+                  context.remoteAddress,
+                  config.encoder
+                ) && !stale( // nonce is not stale
+                  header.nonce,
+                  config.nonceTimeout
+                ) && header.matchesCredentials( // credentials match
+                  config.realm,
+                  getOpaque(header.nonce),
+                  userPassword
+                )) {
+              AuthenticationResult(
+                success = true,
+                principal = Some(header.userName),
+                errorMessage = None
+              )
+            } else {
               AuthenticationResult(
                 success = false,
                 principal = None,
-                errorMessage = Some("A server error occurred")
+                errorMessage = Some("Invalid credentials")
               )
+            }
           }
-      case None =>
-        Future.successful(
-          AuthenticationResult(
-            success = false,
-            principal = None,
-            errorMessage = None
-          )
         )
-    }
-
-  }
+        .recover {
+          case _: Throwable =>
+            AuthenticationResult(
+              success = false,
+              principal = None,
+              errorMessage = Some("A server error occurred")
+            )
+        }
+    }.getOrElse(
+      Future.successful(
+        AuthenticationResult(
+          success = false,
+          principal = None,
+          errorMessage = None
+        )
+      )
+    )
 
   def challenge(context: AuthenticationContext): Map[String, String] = {
     val isStale = getHeader(context).exists(
@@ -96,7 +93,7 @@ final case class DigestAuthenticator(config: DigestAuthenticatorConfiguration)
     val opaque = getOpaque(nonce)
     Map(
       "WWW-Authenticate" ->
-        s"""Digest realm="${config.realm}", nonce="$nonce", opaque="$opaque", stale=$isStale, algorithm=MD5, qop="auth""""
+        s"""Digest realm="${config.realm}", nonce="$nonce", opaque="$opaque", stale=$isStale, algorithm=MD5, qop="${Auth.name}""""
     )
   }
 

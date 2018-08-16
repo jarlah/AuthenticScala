@@ -11,12 +11,11 @@ final case class DigestAuthenticatorConfiguration(
 
 object DigestAuthenticatorConfiguration {
   def apply(config: Config): DigestAuthenticatorConfiguration = {
-    val conf       = config.getConfig("authentic.digest")
-    val privateKey = conf.getString("nonce.privateKey")
-    DigestAuthenticatorConfiguration(
-      PrivateHashEncoder(privateKey),
-      conf.getLong("nonce.timeout"),
-      conf.getString("realm")
-    )
+    val conf         = config.getConfig("authentic.digest")
+    val realm        = conf.getString("realm")
+    val nonceKey     = conf.getString("nonce.privateKey")
+    val nonceTimeout = conf.getLong("nonce.timeout")
+    val nonceEncoder = PrivateHashEncoder(nonceKey)
+    DigestAuthenticatorConfiguration(nonceEncoder, nonceTimeout, realm)
   }
 }

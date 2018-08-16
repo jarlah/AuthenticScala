@@ -6,8 +6,6 @@ final case class BasicAuthenticatorConfiguration(realm: String)
     extends AuthenticatorConfiguration
 
 object BasicAuthenticatorConfiguration {
-  def apply(config: Config): BasicAuthenticatorConfiguration = {
-    val basicConfig = config.getConfig("authentic.basic")
-    BasicAuthenticatorConfiguration(basicConfig.getString("realm"))
-  }
+  def apply(config: Config): BasicAuthenticatorConfiguration =
+    BasicAuthenticatorConfiguration(config.getString("authentic.basic.realm"))
 }
