@@ -3,7 +3,7 @@ import com.github.jarlah.authenticscala.HeaderParser
 import com.github.jarlah.authenticscala.utils.Base64Utils
 
 object BasicHeaderParser extends HeaderParser {
-  val headerPrefix = "Basic "
+  val headerPrefix = "Basic"
 
   def extractBasicHeader(authHeader: String): Option[BasicHeader] =
     getHeaderValue(authHeader)
