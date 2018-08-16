@@ -7,9 +7,9 @@ object BasicHeaderParser extends HeaderParser {
 
   def extractBasicHeader(authHeader: String): Option[BasicHeader] =
     getHeaderValue(authHeader)
+      .map(Base64Utils.decode)
       .filter(_.contains(":"))
-      .map(headerValue => {
-        val decoded  = Base64Utils.decode(headerValue)
+      .map(decoded => {
         val userPass = decoded.split(":")
         BasicHeader(userPass(0), userPass(1))
       })
