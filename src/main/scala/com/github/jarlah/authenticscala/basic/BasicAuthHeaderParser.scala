@@ -6,9 +6,11 @@ object BasicAuthHeaderParser extends AuthenticatorParser {
   val headerPrefix = "Basic "
 
   def extractBasicHeader(authHeader: String): Option[BasicHeader] =
-    getHeaderValue(authHeader).map(headerValue => {
-      val decoded  = Base64Utils.decode(headerValue)
-      val userPass = decoded.split(":")
-      BasicHeader(userPass(0), userPass(1))
-    })
+    getHeaderValue(authHeader)
+      .filter(_.contains(":"))
+      .map(headerValue => {
+        val decoded  = Base64Utils.decode(headerValue)
+        val userPass = decoded.split(":")
+        BasicHeader(userPass(0), userPass(1))
+      })
 }
