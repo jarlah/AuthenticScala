@@ -7,5 +7,6 @@ trait HeaderParser {
     Option(authHeader)
       .filter(_.nonEmpty)
       .filter(_.startsWith(headerPrefix))
+      .filter(_.length > headerPrefix.length)
       .map(_.substring(headerPrefix.length + 1))
 }

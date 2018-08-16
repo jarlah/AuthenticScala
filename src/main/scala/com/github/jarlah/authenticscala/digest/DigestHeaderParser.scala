@@ -10,25 +10,27 @@ object DigestHeaderParser extends HeaderParser {
       authHeader: String
   ): Option[DigestHeader] =
     getHeaderValue(authHeader)
-      .map(getHeaderDictionary)
+      .flatMap(toHeaderDictionary)
       .map(
-        dictionary =>
+        dict =>
           DigestHeader(
             verb = verb,
-            userName = dictionary.getOrElse("username", ""),
-            realm = dictionary.getOrElse("realm", ""),
-            uri = dictionary.getOrElse("uri", ""),
-            nonce = dictionary.getOrElse("nonce", ""),
-            requestCounter = dictionary.get("nc").map(_.toInt).getOrElse(0),
-            clientNonce = dictionary.getOrElse("cnonce", ""),
-            response = dictionary.getOrElse("response", ""),
-            qualityOfProtection = getQualityOfProtection(dictionary.get("qop")),
-            opaque = dictionary.getOrElse("opaque", "")
+            userName = dict.getOrElse("username", ""),
+            realm = dict.getOrElse("realm", ""),
+            uri = dict.getOrElse("uri", ""),
+            nonce = dict.getOrElse("nonce", ""),
+            requestCounter = dict.get("nc").map(_.toInt).getOrElse(0),
+            clientNonce = dict.getOrElse("cnonce", ""),
+            response = dict.getOrElse("response", ""),
+            qualityOfProtection = toQualityOfProtection(dict.get("qop")),
+            opaque = dict.getOrElse("opaque", "")
         )
       )
 
-  private[this] def getQualityOfProtection(qop: Option[String]) =
-    qop
+  private[this] def toQualityOfProtection(
+      maybeQop: Option[String]
+  ): DigestQualityOfProtection =
+    maybeQop
       .map(_.replace(" ", ""))
       .map {
         case Auth.name                       => Auth
@@ -36,21 +38,24 @@ object DigestHeaderParser extends HeaderParser {
       }
       .getOrElse(Auth)
 
-  private[this] def getHeaderDictionary(
+  private[this] def toHeaderDictionary(
       headerValue: String
-  ): Map[String, String] =
-    headerValue
-      .split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
+  ): Option[Map[String, String]] =
+    Option(headerValue)
       .filter(_.contains("="))
-      .map(pair => {
-        val equalSign = pair.indexOf("=")
-        val key =
-          pair.substring(0, equalSign).trim().replaceAll("\"", "").trim
-        val value =
-          pair.substring(equalSign + 1).trim().replaceAll("\"", "").trim
-        (key, value)
-      })
-      .toMap
+      .map(
+        _.split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
+          .filter(_.contains("="))
+          .map(pair => {
+            val equalSign = pair.indexOf("=")
+            val key =
+              pair.substring(0, equalSign).trim().replaceAll("\"", "").trim
+            val value =
+              pair.substring(equalSign + 1).trim().replaceAll("\"", "").trim
+            (key, value)
+          })
+          .toMap
+      )
 
   private[this] def isAuthWithIntegrity(qop: String): Boolean =
     qop == AuthWithIntegrity.name || qop == Seq(

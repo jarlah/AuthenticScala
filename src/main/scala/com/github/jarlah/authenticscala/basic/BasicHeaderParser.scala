@@ -10,7 +10,8 @@ object BasicHeaderParser extends HeaderParser {
       .map(Base64Utils.decode)
       .filter(_.contains(":"))
       .map(_.split(":"))
-      .map {
-        case Array(user, pass) => BasicHeader(user, pass)
-      }
+      .filter(_.length == 2)
+      .map(arr => (arr(0), arr(1)))
+      .map(BasicHeader.tupled)
+
 }
