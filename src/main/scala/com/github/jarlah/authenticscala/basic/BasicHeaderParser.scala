@@ -8,7 +8,6 @@ object BasicHeaderParser extends HeaderParser {
   def extractBasicHeader(authHeader: String): Option[BasicHeader] =
     getHeaderValue(authHeader)
       .map(Base64Utils.decode)
-      .filter(_.contains(":"))
       .map(_.split(":"))
       .filter(_.length == 2)
       .map(arr => (arr(0), arr(1)))
