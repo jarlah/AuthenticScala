@@ -22,34 +22,33 @@ object DigestHeaderParser extends HeaderParser {
             requestCounter = dictionary.get("nc").map(_.toInt).getOrElse(0),
             clientNonce = dictionary.getOrElse("cnonce", ""),
             response = dictionary.getOrElse("response", ""),
-            qualityOfProtection = dictionary
-              .get("qop")
-              .map(_.replace(" ", ""))
-              .map {
-                case Auth.name                       => Auth
-                case qop if isAuthWithIntegrity(qop) => AuthWithIntegrity
-              }
-              .getOrElse(Auth),
+            qualityOfProtection = getQualityOfProtection(dictionary.get("qop")),
             opaque = dictionary.getOrElse("opaque", "")
         )
       )
+
+  private[this] def getQualityOfProtection(qop: Option[String]) =
+    qop
+      .map(_.replace(" ", ""))
+      .map {
+        case Auth.name                       => Auth
+        case qop if isAuthWithIntegrity(qop) => AuthWithIntegrity
+      }
+      .getOrElse(Auth)
 
   private[this] def getHeaderDictionary(
       headerValue: String
   ): Map[String, String] =
     headerValue
       .split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
-      .flatMap(pair => {
+      .filter(_.contains("="))
+      .map(pair => {
         val equalSign = pair.indexOf("=")
-        if (equalSign > -1) {
-          val key =
-            pair.substring(0, equalSign).trim().replaceAll("\"", "").trim
-          val value =
-            pair.substring(equalSign + 1).trim().replaceAll("\"", "").trim
-          Some((key, value))
-        } else {
-          None
-        }
+        val key =
+          pair.substring(0, equalSign).trim().replaceAll("\"", "").trim
+        val value =
+          pair.substring(equalSign + 1).trim().replaceAll("\"", "").trim
+        (key, value)
       })
       .toMap
 

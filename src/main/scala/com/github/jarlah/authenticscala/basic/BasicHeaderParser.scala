@@ -9,8 +9,8 @@ object BasicHeaderParser extends HeaderParser {
     getHeaderValue(authHeader)
       .map(Base64Utils.decode)
       .filter(_.contains(":"))
-      .map(decoded => {
-        val userPass = decoded.split(":")
-        BasicHeader(userPass(0), userPass(1))
-      })
+      .map(_.split(":"))
+      .map {
+        case Array(user, pass) => BasicHeader(user, pass)
+      }
 }
