@@ -7,28 +7,30 @@ object DigestAuthHeaderParser extends App {
       verb: String,
       authHeader: String
   ): Option[DigestHeader] = {
-    getHeaderValue(authHeader).map(headerValue => {
-      val headerDictionary = getHeaderDictionary(headerValue)
-      DigestHeader(
-        verb = verb,
-        userName = headerDictionary.getOrElse("username", ""),
-        realm = headerDictionary.getOrElse("realm", ""),
-        uri = headerDictionary.getOrElse("uri", ""),
-        nonce = headerDictionary.getOrElse("nonce", ""),
-        requestCounter = headerDictionary.get("nc").map(_.toInt).getOrElse(0),
-        clientNonce = headerDictionary.getOrElse("cnonce", ""),
-        response = headerDictionary.getOrElse("response", ""),
-        qualityOfProtection = headerDictionary
-          .get("qop")
-          .map(_.replace(" ", ""))
-          .map {
-            case Auth.name                       => Auth
-            case qop if isAuthWithIntegrity(qop) => AuthWithIntegrity
-          }
-          .getOrElse(Auth),
-        opaque = headerDictionary.getOrElse("opaque", "")
+    getHeaderValue(authHeader)
+      .map(getHeaderDictionary)
+      .map(
+        dictionary =>
+          DigestHeader(
+            verb = verb,
+            userName = dictionary.getOrElse("username", ""),
+            realm = dictionary.getOrElse("realm", ""),
+            uri = dictionary.getOrElse("uri", ""),
+            nonce = dictionary.getOrElse("nonce", ""),
+            requestCounter = dictionary.get("nc").map(_.toInt).getOrElse(0),
+            clientNonce = dictionary.getOrElse("cnonce", ""),
+            response = dictionary.getOrElse("response", ""),
+            qualityOfProtection = dictionary
+              .get("qop")
+              .map(_.replace(" ", ""))
+              .map {
+                case Auth.name                       => Auth
+                case qop if isAuthWithIntegrity(qop) => AuthWithIntegrity
+              }
+              .getOrElse(Auth),
+            opaque = dictionary.getOrElse("opaque", "")
+        )
       )
-    })
   }
 
   private[this] def getHeaderDictionary(
