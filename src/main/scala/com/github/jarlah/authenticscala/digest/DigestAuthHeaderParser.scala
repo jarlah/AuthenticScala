@@ -1,32 +1,24 @@
 package com.github.jarlah.authenticscala.digest
 
 object DigestAuthHeaderParser {
+  private val headerPrefix = "Digest "
+
   def extractDigestHeader(
       verb: String,
       authHeader: String
   ): Option[DigestHeader] = {
-
-    if (null == authHeader
-        || null == verb
-        || authHeader.isEmpty
-        || !authHeader.startsWith("Digest")
-        || headerValue(authHeader).isEmpty) {
-      return None
-    }
-
-    val headerDictionary: Map[String, String] = headerValue(authHeader)
-      .split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
-      .map(pair => {
-        val firstEqualIndex = pair.indexOf("=")
-        val key =
-          pair.substring(0, firstEqualIndex).trim().replaceAll("\"", "").trim
-        val value =
-          pair.substring(firstEqualIndex + 1).trim().replaceAll("\"", "").trim
-        (key, value)
-      })
-      .toMap
-
-    Some(
+    getHeaderValue(authHeader).map(headerValue => {
+      val headerDictionary: Map[String, String] = headerValue
+        .split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
+        .map(pair => {
+          val firstEqualIndex = pair.indexOf("=")
+          val key =
+            pair.substring(0, firstEqualIndex).trim().replaceAll("\"", "").trim
+          val value =
+            pair.substring(firstEqualIndex + 1).trim().replaceAll("\"", "").trim
+          (key, value)
+        })
+        .toMap
       DigestHeader(
         verb = verb,
         userName = headerDictionary.getOrElse("username", ""),
@@ -46,7 +38,7 @@ object DigestAuthHeaderParser {
           .getOrElse(Auth),
         opaque = headerDictionary.getOrElse("opaque", "")
       )
-    )
+    })
   }
 
   private[this] def isAuthWithIntegrity(qop: String) =
@@ -55,6 +47,12 @@ object DigestAuthHeaderParser {
       AuthWithIntegrity.name
     ).mkString(",")
 
-  private[this] def headerValue(authHeader: String) =
-    authHeader.substring("Digest".length + 1)
+  private[this] def getHeaderValue(authHeader: String): Option[String] = {
+    if (null == authHeader
+        || authHeader.isEmpty
+        || !authHeader.startsWith(headerPrefix)) {
+      return None
+    }
+    Some(authHeader.substring(headerPrefix.length))
+  }
 }

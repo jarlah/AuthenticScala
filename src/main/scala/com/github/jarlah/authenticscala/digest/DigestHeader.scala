@@ -19,12 +19,6 @@ final case class DigestHeader(
       opaque: String,
       password: String
   ): Boolean = {
-    if (null == realm
-        || null == password
-        || this.opaque != opaque
-        || this.realm != realm) {
-      return false
-    }
     val hash1 = DigestUtils.md5Hex(s"$userName:$realm:$password")
     val hash2 = DigestUtils.md5Hex(s"$verb:$uri")
     response == createResponse(hash1, hash2)

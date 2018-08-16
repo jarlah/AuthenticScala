@@ -2,22 +2,25 @@ package com.github.jarlah.authenticscala.basic
 import com.github.jarlah.authenticscala.utils.Base64Utils
 
 object BasicAuthHeaderParser {
+  private val headerPrefix = "Basic "
+
   def extractBasicHeader(authHeader: String): Option[BasicHeader] = {
+    getHeaderValue(authHeader).flatMap(headerValue => {
+      val decoded  = Base64Utils.decode(headerValue)
+      val userPass = decoded.split(":")
+      if (userPass.size == 2) {
+        Some(BasicHeader(userPass(0), userPass(1)))
+      } else {
+        None
+      }
+    })
+  }
+  private[this] def getHeaderValue(authHeader: String): Option[String] = {
     if (authHeader == null
         || authHeader.isEmpty
-        || !authHeader.startsWith("Basic")
-        || headerValue(authHeader).isEmpty) {
+        || !authHeader.startsWith(headerPrefix)) {
       return None
     }
-    val base64Str = headerValue(authHeader)
-    val decoded   = Base64Utils.decode(base64Str)
-    val userPass  = decoded.split(":")
-    if (userPass.size == 2) {
-      Some(BasicHeader(userPass(0), userPass(1)))
-    } else {
-      None
-    }
+    Some(authHeader.substring(headerPrefix.length))
   }
-  private[this] def headerValue(authHeader: String) =
-    authHeader.substring("Basic".length + 1)
 }

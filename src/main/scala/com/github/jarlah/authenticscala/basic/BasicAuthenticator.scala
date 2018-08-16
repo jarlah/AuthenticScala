@@ -31,7 +31,7 @@ final case class BasicAuthenticator(config: BasicAuthenticatorConfiguration)
         passwordRetriever
           .apply(basicHeader.username)
           .map {
-            case userSecret if userSecret == basicHeader.password =>
+            case userSecret if basicHeader.credentialsMatches(userSecret) =>
               AuthenticationResult(
                 success = true,
                 principal = Some(basicHeader.username),
