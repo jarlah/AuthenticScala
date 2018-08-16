@@ -51,8 +51,6 @@ object DigestAuthHeaderParser extends App {
       .toMap
   }
 
-  println(getHeaderDictionary(""))
-
   private[this] def isAuthWithIntegrity(qop: String): Boolean =
     qop == AuthWithIntegrity.name || qop == Seq(
       Auth.name,
