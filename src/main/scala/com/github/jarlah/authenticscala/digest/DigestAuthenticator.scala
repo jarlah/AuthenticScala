@@ -31,36 +31,18 @@ final case class DigestAuthenticator(config: DigestConfiguration)
   )(implicit ec: ExecutionContext): Future[AuthenticationResult] =
     getHeader(context).map { header =>
       retriever(header.userName).map {
-        case Some(userPassword) =>
-          if (validate( // nonce is valid
-                header.nonce,
-                context.remoteAddress,
-                config.encoder
-              ) && !stale( // nonce is not stale
-                header.nonce,
-                config.nonceTimeout
-              ) && header.matchesCredentials( // credentials match
-                config.realm,
-                getOpaque(header.nonce),
-                userPassword
-              )) {
-            AuthenticationResult(
-              success = true,
-              principal = Some(header.userName),
-              errorMessage = None
-            )
-          } else {
-            AuthenticationResult(
-              success = false,
-              principal = None,
-              errorMessage = Some("Invalid credentials")
-            )
-          }
+        case Some(userPassword)
+            if isValid(context.remoteAddress, header, userPassword) =>
+          AuthenticationResult(
+            success = true,
+            principal = Some(header.userName),
+            errorMessage = None
+          )
         case _ =>
           AuthenticationResult(
             success = false,
             principal = None,
-            errorMessage = None
+            errorMessage = Some("Invalid credentials")
           )
       }.recover {
         case _: Throwable =>
@@ -102,4 +84,22 @@ final case class DigestAuthenticator(config: DigestConfiguration)
 
   private[this] def getHeader(context: AuthenticationContext) =
     extractDigestHeader(context.httpMethod, context.getAuthHeader)
+
+  private[this] def isValid(
+      remoteAddress: String,
+      header: DigestHeader,
+      userPassword: String
+  ) =
+    validate( // nonce is valid
+      header.nonce,
+      remoteAddress,
+      config.encoder
+    ) && !stale( // nonce is not stale
+      header.nonce,
+      config.nonceTimeout
+    ) && header.matchesCredentials( // credentials match
+      config.realm,
+      getOpaque(header.nonce),
+      userPassword
+    )
 }
