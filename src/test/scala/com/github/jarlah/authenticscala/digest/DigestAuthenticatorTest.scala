@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.FiniteDuration
 
 class DigestAuthenticatorTest extends FlatSpec {
-  val retriever: PasswordRetriever = (u: String) => Future.successful(u)
+  val retriever: PasswordRetriever = (u: String) => Future.successful(Option(u))
 
   val timeout = FiniteDuration(1, TimeUnit.SECONDS)
 

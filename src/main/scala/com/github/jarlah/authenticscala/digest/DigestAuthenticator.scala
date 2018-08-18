@@ -30,43 +30,46 @@ final case class DigestAuthenticator(config: DigestConfiguration)
       retriever: PasswordRetriever
   )(implicit ec: ExecutionContext): Future[AuthenticationResult] =
     getHeader(context).map { header =>
-      retriever(header.userName)
-        .map(
-          userPassword => {
-            if (validate( // nonce is valid
-                  header.nonce,
-                  context.remoteAddress,
-                  config.encoder
-                ) && !stale( // nonce is not stale
-                  header.nonce,
-                  config.nonceTimeout
-                ) && header.matchesCredentials( // credentials match
-                  config.realm,
-                  getOpaque(header.nonce),
-                  userPassword
-                )) {
-              AuthenticationResult(
-                success = true,
-                principal = Some(header.userName),
-                errorMessage = None
-              )
-            } else {
-              AuthenticationResult(
-                success = false,
-                principal = None,
-                errorMessage = Some("Invalid credentials")
-              )
-            }
-          }
-        )
-        .recover {
-          case _: Throwable =>
+      retriever(header.userName).map {
+        case Some(userPassword) =>
+          if (validate( // nonce is valid
+                header.nonce,
+                context.remoteAddress,
+                config.encoder
+              ) && !stale( // nonce is not stale
+                header.nonce,
+                config.nonceTimeout
+              ) && header.matchesCredentials( // credentials match
+                config.realm,
+                getOpaque(header.nonce),
+                userPassword
+              )) {
+            AuthenticationResult(
+              success = true,
+              principal = Some(header.userName),
+              errorMessage = None
+            )
+          } else {
             AuthenticationResult(
               success = false,
               principal = None,
-              errorMessage = Some("A server error occurred")
+              errorMessage = Some("Invalid credentials")
             )
-        }
+          }
+        case _ =>
+          AuthenticationResult(
+            success = false,
+            principal = None,
+            errorMessage = None
+          )
+      }.recover {
+        case _: Throwable =>
+          AuthenticationResult(
+            success = false,
+            principal = None,
+            errorMessage = Some("A server error occurred")
+          )
+      }
     }.getOrElse(
       Future.successful(
         AuthenticationResult(

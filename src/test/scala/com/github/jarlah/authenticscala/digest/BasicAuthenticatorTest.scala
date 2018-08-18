@@ -21,8 +21,11 @@ class BasicAuthenticatorTest extends FlatSpec {
       "127.0.0.1"
     )
     val result = Await.result(
-      Authenticator
-        .authenticate(context, (u: String) => Future.successful(u), "basic"),
+      Authenticator.authenticate(
+        context,
+        (u: String) => Future.successful(Some(u)),
+        "basic"
+      ),
       timeout
     )
     assert(result.success)
@@ -39,7 +42,7 @@ class BasicAuthenticatorTest extends FlatSpec {
     val result = Await.result(
       Authenticator.authenticate(
         context,
-        (u: String) => Future.successful("wrong"),
+        (u: String) => Future.successful(Some("wrong")),
         "basic"
       ),
       timeout

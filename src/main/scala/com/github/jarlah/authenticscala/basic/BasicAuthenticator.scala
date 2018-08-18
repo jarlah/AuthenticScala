@@ -30,7 +30,7 @@ final case class BasicAuthenticator(config: BasicConfiguration)
       passwordRetriever
         .apply(header.username)
         .map {
-          case userSecret if header.credentialsMatches(userSecret) =>
+          case Some(userSecret) if header.credentialsMatches(userSecret) =>
             AuthenticationResult(
               success = true,
               principal = Some(header.username),

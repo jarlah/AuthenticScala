@@ -23,7 +23,7 @@ object Authenticator {
   case object Digest extends Mode
   case object Basic  extends Mode
 
-  type PasswordRetriever = String => Future[String]
+  type PasswordRetriever = String => Future[Option[String]]
 
   implicit def fromStringToMode(mode: String): Mode =
     mode.toLowerCase match {
